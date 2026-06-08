@@ -1,70 +1,165 @@
 /* ===== Reset & Base ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #111;
+  background: #050510;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  font-family: 'Courier New', monospace;
+  font-family: 'Courier New', 'Consolas', monospace;
   overflow: hidden;
 }
 
 /* ===== Game Container ===== */
 #game-container {
   position: relative;
-  border: 3px solid #555;
-  box-shadow: 0 0 40px rgba(0,255,0,0.15);
+  border: 2px solid #334455;
+  box-shadow: 0 0 30px rgba(0, 255, 136, 0.1), 0 0 60px rgba(0, 255, 136, 0.05);
 }
 
 /* ===== HUD ===== */
 #hud {
   display: flex;
   justify-content: space-between;
-  padding: 6px 16px;
-  background: #222;
-  color: #0f0;
-  font-size: 14px;
-  border-bottom: 2px solid #555;
+  padding: 8px 20px;
+  background: #0a0a0f;
+  color: #ffcc00;
+  font-size: 13px;
+  border-bottom: 1px solid #334455;
 }
 .hud-item { display: flex; flex-direction: column; align-items: center; }
-.hud-label { font-size: 9px; color: #888; letter-spacing: 2px; margin-bottom: 2px; }
-.hud-value { font-size: 18px; font-weight: bold; }
+.hud-label {
+  font-size: 8px;
+  color: #667788;
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+.hud-value { font-size: 16px; font-weight: bold; color: #ffcc00; }
 
 /* ===== Canvas ===== */
-canvas { display: block; background: #000; }
+canvas {
+  display: block;
+  background: #0a0a0f;
+}
 
-/* ===== Overlay (start / game over screens) ===== */
+/* ===== Overlay ===== */
 #overlay {
   position: absolute; inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(5, 5, 16, 0.92);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10;
+  backdrop-filter: blur(4px);
 }
 #overlay.hidden { display: none; }
-#overlay-content { text-align: center; color: #fff; }
-#overlay-content h1 {
-  font-size: 48px; color: #0f0;
-  text-shadow: 0 0 20px #0f0, 0 0 40px #0a0;
-  margin-bottom: 12px;
+#overlay-content {
+  text-align: center;
+  color: #fff;
+  max-width: 620px;
+  padding: 40px;
 }
-.subtitle { font-size: 14px; color: #aaa; margin-bottom: 24px; }
-#startBtn {
-  padding: 12px 48px; font-size: 18px; font-family: inherit;
-  background: transparent; color: #0f0; border: 2px solid #0f0;
-  cursor: pointer; letter-spacing: 3px;
-  transition: all 0.2s;
-}
-#startBtn:hover { background: #0f0; color: #000; }
 
-/* Game over specific */
+/* Titles */
+#overlay-content h1 {
+  font-size: 52px;
+  color: #00ff88;
+  text-shadow: 0 0 20px #00ff88, 0 0 40px #00aa44, 0 0 80px #006622;
+  margin-bottom: 12px;
+  letter-spacing: 8px;
+}
 #overlay-content h2 {
-  font-size: 32px; color: #f44;
-  text-shadow: 0 0 15px #f00;
+  font-size: 28px;
+  color: #ff3355;
+  text-shadow: 0 0 15px #ff3355;
   margin-bottom: 12px;
 }
+
+.subtitle { font-size: 14px; color: #667788; margin-bottom: 24px; }
+.final-score { font-size: 16px; color: #ffcc00; margin-bottom: 8px; }
+
+/* ===== Buttons ===== */
+.cyber-btn {
+  padding: 12px 48px;
+  font-size: 16px;
+  font-family: inherit;
+  background: transparent;
+  color: #00ff88;
+  border: 2px solid #00ff88;
+  cursor: pointer;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  margin: 6px;
+  position: relative;
+}
+.cyber-btn:hover {
+  background: #00ff88;
+  color: #050510;
+  box-shadow: 0 0 20px #00ff88;
+}
+.cyber-btn.secondary {
+  color: #ffcc00;
+  border-color: #ffcc00;
+}
+.cyber-btn.secondary:hover {
+  background: #ffcc00;
+  color: #050510;
+  box-shadow: 0 0 20px #ffcc00;
+}
+
+/* ===== Shop Grid ===== */
+.shop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+.shop-slot {
+  border: 1px solid #334455;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.shop-slot:hover {
+  border-color: #ff66ff;
+  box-shadow: 0 0 12px rgba(255, 102, 255, 0.3);
+}
+.slot-name { color: #ff66ff; font-size: 14px; font-weight: bold; }
+.slot-info { color: #667788; font-size: 10px; margin: 4px 0; }
+.slot-cost { color: #ffcc00; font-size: 12px; }
+
+/* ===== Talent Tree ===== */
+.talent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  text-align: left;
+}
+.talent-branch h3 { margin-bottom: 8px; font-size: 14px; }
+.talent-node {
+  padding: 6px 10px;
+  border: 1px solid #334455;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #667788;
+  display: flex;
+  justify-content: space-between;
+  transition: all 0.15s;
+}
+.talent-node:hover {
+  border-color: #00ff88;
+}
+.talent-node.unlocked {
+  border-color: #00ff88;
+  color: #00ff88;
+}
+
+/* ===== Game Over ===== */
 #overlay-content .final-score {
-  font-size: 18px; color: #ff0; margin-bottom: 20px;
+  font-size: 18px;
+  color: #ffcc00;
+  margin-bottom: 20px;
 }
