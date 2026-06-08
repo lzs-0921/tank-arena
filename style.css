@@ -1,0 +1,70 @@
+/* ===== Reset & Base ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+}
+
+/* ===== Game Container ===== */
+#game-container {
+  position: relative;
+  border: 3px solid #555;
+  box-shadow: 0 0 40px rgba(0,255,0,0.15);
+}
+
+/* ===== HUD ===== */
+#hud {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 16px;
+  background: #222;
+  color: #0f0;
+  font-size: 14px;
+  border-bottom: 2px solid #555;
+}
+.hud-item { display: flex; flex-direction: column; align-items: center; }
+.hud-label { font-size: 9px; color: #888; letter-spacing: 2px; margin-bottom: 2px; }
+.hud-value { font-size: 18px; font-weight: bold; }
+
+/* ===== Canvas ===== */
+canvas { display: block; background: #000; }
+
+/* ===== Overlay (start / game over screens) ===== */
+#overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+#overlay.hidden { display: none; }
+#overlay-content { text-align: center; color: #fff; }
+#overlay-content h1 {
+  font-size: 48px; color: #0f0;
+  text-shadow: 0 0 20px #0f0, 0 0 40px #0a0;
+  margin-bottom: 12px;
+}
+.subtitle { font-size: 14px; color: #aaa; margin-bottom: 24px; }
+#startBtn {
+  padding: 12px 48px; font-size: 18px; font-family: inherit;
+  background: transparent; color: #0f0; border: 2px solid #0f0;
+  cursor: pointer; letter-spacing: 3px;
+  transition: all 0.2s;
+}
+#startBtn:hover { background: #0f0; color: #000; }
+
+/* Game over specific */
+#overlay-content h2 {
+  font-size: 32px; color: #f44;
+  text-shadow: 0 0 15px #f00;
+  margin-bottom: 12px;
+}
+#overlay-content .final-score {
+  font-size: 18px; color: #ff0; margin-bottom: 20px;
+}
