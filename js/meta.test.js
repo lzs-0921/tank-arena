@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { loadMeta, saveMeta, getTalentTree, unlockTalent, applyMetaBonuses } from './meta.js';
+import { loadMeta, saveMeta, getTalentTree, unlockTalent, applyMetaBonuses, addDataCores, updateBestDepth } from './meta.js';
 
 const store = {};
 beforeEach(() => {
@@ -66,5 +66,48 @@ describe('applyMetaBonuses', () => {
     applyMetaBonuses(player, meta);
     expect(player.shootCooldown).toBeCloseTo(0.36); // 0.4 * 0.9
     expect(player.maxHp).toBe(6); // 5 + 1
+  });
+});
+
+describe('getTalentTree', () => {
+  it('returns talent tree with attack, defense, utility branches', () => {
+    const tree = getTalentTree();
+    expect(tree.attack).toBeDefined();
+    expect(tree.defense).toBeDefined();
+    expect(tree.utility).toBeDefined();
+    expect(tree.attack.length).toBeGreaterThan(0);
+  });
+});
+
+describe('addDataCores', () => {
+  it('adds cores and persists to localStorage', () => {
+    const meta = { dataCores: 10, unlockedTalents: [], bestDepth: 0 };
+    addDataCores(meta, 15);
+    expect(meta.dataCores).toBe(25);
+    const saved = JSON.parse(store['tankArena_meta']);
+    expect(saved.dataCores).toBe(25);
+  });
+});
+
+describe('updateBestDepth', () => {
+  it('updates bestDepth when new depth is higher', () => {
+    const meta = { dataCores: 0, unlockedTalents: [], bestDepth: 1 };
+    updateBestDepth(meta, 3);
+    expect(meta.bestDepth).toBe(3);
+  });
+
+  it('does not update when new depth is lower', () => {
+    const meta = { dataCores: 0, unlockedTalents: [], bestDepth: 3 };
+    updateBestDepth(meta, 2);
+    expect(meta.bestDepth).toBe(3);
+  });
+});
+
+describe('unlockTalent error branch', () => {
+  it('fails for invalid talent id', () => {
+    const meta = { dataCores: 100, unlockedTalents: [], bestDepth: 0 };
+    const result = unlockTalent(meta, 'nonexistent_id');
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('talent not found');
   });
 });
