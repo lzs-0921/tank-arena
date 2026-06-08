@@ -87,14 +87,13 @@ export class FloorMap {
       const doorSides = [];
       if (i > 0) doorSides.push('west');
       if (i < count - 1) doorSides.push('east');
-      if (Math.random() < 0.3 && i > 0 && i < count - 1) {
-        doorSides.push(Math.random() > 0.5 ? 'north' : 'south');
-      }
       return new Room(type, this.floorNum, doorSides);
     });
 
+    // Bidirectional connections between adjacent rooms
     for (let i = 0; i < this.rooms.length - 1; i++) {
       this.connections.push({ from: i, to: i + 1, doorSide: 'east' });
+      this.connections.push({ from: i + 1, to: i, doorSide: 'west' });
     }
   }
 }

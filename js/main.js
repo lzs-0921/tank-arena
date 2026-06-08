@@ -90,8 +90,6 @@ function enterRoom(index) {
 }
 
 function transitionRoom(gs, toIndex) {
-  gs.roomsCleared++;
-
   if (toIndex >= gs.floorMap.rooms.length) {
     gs.currentFloor++;
     gs.floorMap = generateFloor(gs.currentFloor);
@@ -250,6 +248,16 @@ function updateRunning(gs) {
     !gs.currentRoom.cleared
   ) {
     gs.currentRoom.openDoors();
+    gs.roomsCleared++;
+
+    // Boss room cleared → auto advance to next floor
+    if (gs.currentRoom.type === 'boss') {
+      gs.currentFloor++;
+      gs.floorMap = generateFloor(gs.currentFloor);
+      enterRoom(0);
+      return;
+    }
+
     gs.state = 'ROOM_CLEAR';
   }
 }
