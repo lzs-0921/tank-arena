@@ -75,34 +75,31 @@ function drawCyberpunkBackground(ctx, gs) {
   const t = gs.time;
 
   // --- Layer 1: deep base fill ---
-  ctx.fillStyle = '#050510';
+  ctx.fillStyle = '#020208';
   ctx.fillRect(-10, -10, W + 20, H + 20);
 
-  // --- Layer 2: large hex grid (subtle, stationary) ---
-  const hexR = 48;
-  const hexH = hexR * Math.sqrt(3);
-  ctx.strokeStyle = 'rgba(51, 68, 85, 0.18)';
-  ctx.lineWidth = 0.6;
-  for (let row = -1; row < H / hexH + 2; row++) {
-    for (let col = -1; col < W / (hexR * 1.5) + 2; col++) {
-      const cx = col * hexR * 1.5;
-      const cy = row * hexH + (col % 2 === 0 ? 0 : hexH / 2);
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const angle = Math.PI / 3 * i - Math.PI / 6;
-        const px = cx + hexR * Math.cos(angle);
-        const py = cy + hexR * Math.sin(angle);
-        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.stroke();
+  // --- Layer 2: industrial panel sections ---
+  // Divide background into large mechanical panels with subtle borders
+  const panelW = 160;
+  const panelH = 120;
+  ctx.strokeStyle = 'rgba(40, 55, 70, 0.5)';
+  ctx.lineWidth = 1;
+  for (let px = 0; px < W; px += panelW) {
+    for (let py = 0; py < H; py += panelH) {
+      ctx.strokeRect(px + 2, py + 2, panelW - 4, panelH - 4);
+      // Rivet dots at panel corners
+      ctx.fillStyle = 'rgba(80, 100, 120, 0.6)';
+      ctx.beginPath(); ctx.arc(px + 8, py + 8, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + panelW - 8, py + 8, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + 8, py + panelH - 8, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + panelW - 8, py + panelH - 8, 2, 0, Math.PI * 2); ctx.fill();
     }
   }
 
-  // --- Layer 3: fine square grid with dot intersections ---
+  // --- Layer 3: square grid with visible dot intersections ---
   const gridSize = 40;
-  ctx.strokeStyle = 'rgba(68, 85, 102, 0.15)';
-  ctx.lineWidth = 0.4;
+  ctx.strokeStyle = 'rgba(60, 80, 100, 0.2)';
+  ctx.lineWidth = 0.5;
   for (let x = 0; x <= W; x += gridSize) {
     ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
   }
@@ -110,78 +107,125 @@ function drawCyberpunkBackground(ctx, gs) {
     ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
   }
 
-  // Glowing dots at grid intersections
+  // Grid intersection dots with individual flicker
   for (let x = 0; x <= W; x += gridSize) {
     for (let y = 0; y <= H; y += gridSize) {
-      const pulse = 0.3 + Math.sin(t * 2 + x * 0.05 + y * 0.03) * 0.2;
-      ctx.fillStyle = `rgba(0, 255, 136, ${pulse * 0.25})`;
+      const flicker = 0.4 + Math.sin(t * 5 + x * 0.1 + y * 0.07) * 0.3
+                        + Math.sin(t * 7 + x * 0.05 - y * 0.04) * 0.2;
+      const alpha = Math.max(0.1, flicker);
+      ctx.fillStyle = `rgba(0, 255, 136, ${alpha * 0.5})`;
       ctx.shadowColor = '#00ff88';
-      ctx.shadowBlur = pulse * 4;
+      ctx.shadowBlur = alpha * 6;
       ctx.beginPath();
-      ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
   }
   ctx.shadowBlur = 0;
 
-  // --- Layer 4: circuit traces (thin neon lines, random segments) ---
-  ctx.strokeStyle = 'rgba(0, 255, 136, 0.06)';
-  ctx.lineWidth = 0.8;
-  // Use deterministic pseudo-random based on floor so traces are consistent per room
-  const seed = gs.currentFloor * 137 + (gs.currentRoom ? gs.currentRoom.type.charCodeAt(0) : 0);
-  for (let i = 0; i < 18; i++) {
-    const sx = ((seed * (i + 1) * 73 + i * 251) % W);
-    const sy = ((seed * (i + 1) * 197 + i * 317) % H);
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    let cx = sx, cy = sy;
-    for (let j = 0; j < 3; j++) {
-      cx += (((seed + i * 7 + j * 13) * 59) % 120) - 40;
-      cy += (((seed + i * 11 + j * 17) * 43) % 120) - 40;
-      ctx.lineTo(cx, cy);
-    }
-    ctx.stroke();
+  // --- Layer 4: mechanical warning stripes along walls ---
+  const stripeH = 16;
+  const stripeW = 12;
+  // Top wall
+  for (let x = 0; x < W; x += stripeW * 2) {
+    ctx.fillStyle = (Math.floor(x / stripeW) % 2 === 0) ? 'rgba(255, 170, 0, 0.12)' : 'rgba(80, 80, 80, 0.06)';
+    ctx.fillRect(x, 0, stripeW, stripeH);
+    ctx.fillRect(x, H - stripeH, stripeW, stripeH);
+  }
+  // Left/right walls
+  for (let y = 0; y < H; y += stripeW * 2) {
+    ctx.fillStyle = (Math.floor(y / stripeW) % 2 === 0) ? 'rgba(255, 170, 0, 0.12)' : 'rgba(80, 80, 80, 0.06)';
+    ctx.fillRect(0, y, stripeH, stripeW);
+    ctx.fillRect(W - stripeH, y, stripeH, stripeW);
   }
 
-  // --- Layer 5: corner HUD brackets ---
-  const bracketLen = 30;
-  const bracketGap = 16;
-  const bracketColor = 'rgba(0, 255, 136, 0.35)';
+  // --- Layer 5: glowing machinery pipes (horizontal + vertical) ---
+  const pipeColor = 'rgba(40, 60, 80, 0.4)';
+  ctx.strokeStyle = pipeColor;
+  ctx.lineWidth = 3;
+  for (let i = 0; i < 3; i++) {
+    const py = 60 + i * 240 + Math.sin(t * 0.2 + i) * 30;
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+    // Pipe joints
+    for (let jx = 80; jx < W; jx += 160) {
+      ctx.fillStyle = 'rgba(60, 85, 110, 0.5)';
+      ctx.fillRect(jx - 6, py - 8, 12, 16);
+      // Joint glow pulse
+      const glow = 0.2 + Math.sin(t * 3 + jx) * 0.15;
+      ctx.fillStyle = `rgba(0, 255, 136, ${glow})`;
+      ctx.fillRect(jx - 3, py - 4, 6, 8);
+    }
+  }
+  for (let i = 0; i < 3; i++) {
+    const px = 100 + i * 300 + Math.cos(t * 0.25 + i) * 40;
+    ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+    for (let jy = 80; jy < H; jy += 160) {
+      ctx.fillStyle = 'rgba(60, 85, 110, 0.5)';
+      ctx.fillRect(px - 5, jy - 5, 10, 10);
+    }
+  }
+
+  // --- Layer 6: random blinking status lights (like server rack LEDs) ---
+  const seed = gs.currentFloor * 137 + gs.roomsCleared * 59;
+  for (let i = 0; i < 40; i++) {
+    const lx = ((seed * (i + 1) * 73 + i * 251) % W);
+    const ly = ((seed * (i + 1) * 197 + i * 317) % H);
+    // Skip if too close to walls (inside warning stripe zone)
+    if (lx < 20 || lx > W - 20 || ly < 20 || ly > H - 20) continue;
+    const blink = Math.sin(t * (3 + i * 0.7) + i * 2.3);
+    // Different colors for variety
+    const ledColors = ['#ff3355', '#00ff88', '#ffaa00', '#44aaff'];
+    const col = ledColors[i % 4];
+    if (blink > 0.3) {
+      ctx.fillStyle = col;
+      ctx.shadowColor = col;
+      ctx.shadowBlur = 5;
+    } else {
+      ctx.fillStyle = '#222233';
+      ctx.shadowBlur = 0;
+    }
+    ctx.beginPath();
+    ctx.arc(lx, ly, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+
+  // --- Layer 7: corner HUD brackets (more visible) ---
+  const bracketLen = 36;
+  const bracketGap = 14;
+  const bracketColor = 'rgba(0, 255, 136, 0.45)';
   ctx.strokeStyle = bracketColor;
-  ctx.lineWidth = 1.5;
+  ctx.lineWidth = 2;
   ctx.shadowColor = '#00ff88';
-  ctx.shadowBlur = 6;
-  // Top-left
+  ctx.shadowBlur = 8;
   ctx.beginPath(); ctx.moveTo(bracketGap, bracketGap + bracketLen); ctx.lineTo(bracketGap, bracketGap); ctx.lineTo(bracketGap + bracketLen, bracketGap); ctx.stroke();
-  // Top-right
   ctx.beginPath(); ctx.moveTo(W - bracketGap - bracketLen, bracketGap); ctx.lineTo(W - bracketGap, bracketGap); ctx.lineTo(W - bracketGap, bracketGap + bracketLen); ctx.stroke();
-  // Bottom-left
   ctx.beginPath(); ctx.moveTo(bracketGap, H - bracketGap - bracketLen); ctx.lineTo(bracketGap, H - bracketGap); ctx.lineTo(bracketGap + bracketLen, H - bracketGap); ctx.stroke();
-  // Bottom-right
   ctx.beginPath(); ctx.moveTo(W - bracketGap - bracketLen, H - bracketGap); ctx.lineTo(W - bracketGap, H - bracketGap); ctx.lineTo(W - bracketGap, H - bracketGap - bracketLen); ctx.stroke();
   ctx.shadowBlur = 0;
 
-  // --- Layer 6: radial vignette (dark edges) ---
-  const vignetteGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.35, W / 2, H / 2, W * 0.75);
-  vignetteGrad.addColorStop(0, 'rgba(5, 5, 16, 0)');
-  vignetteGrad.addColorStop(1, 'rgba(5, 5, 16, 0.6)');
+  // --- Layer 8: radial vignette (dark edges) ---
+  const vignetteGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.3, W / 2, H / 2, W * 0.8);
+  vignetteGrad.addColorStop(0, 'rgba(2, 2, 8, 0)');
+  vignetteGrad.addColorStop(0.7, 'rgba(2, 2, 8, 0.3)');
+  vignetteGrad.addColorStop(1, 'rgba(2, 2, 8, 0.7)');
   ctx.fillStyle = vignetteGrad;
   ctx.fillRect(0, 0, W, H);
 
-  // --- Layer 7: scanlines ---
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+  // --- Layer 9: scanlines ---
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
   for (let y = 0; y < H; y += 3) {
     ctx.fillRect(0, y, W, 1);
   }
 
-  // --- Layer 8: floating data particles (background only, not interactable) ---
-  for (let i = 0; i < 12; i++) {
-    const px = ((Math.sin(t * 0.3 + i * 1.7) * 0.5 + 0.5) * W);
-    const py = ((Math.cos(t * 0.4 + i * 2.1) * 0.5 + 0.5) * H);
-    const alpha = 0.08 + Math.sin(t * 3 + i) * 0.04;
+  // --- Layer 10: ambient floating particles ---
+  for (let i = 0; i < 16; i++) {
+    const px = ((Math.sin(t * 0.25 + i * 1.7) * 0.5 + 0.5) * W);
+    const py = ((Math.cos(t * 0.35 + i * 2.1) * 0.5 + 0.5) * H);
+    const alpha = 0.1 + Math.sin(t * 4 + i) * 0.06;
     ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
     ctx.beginPath();
-    ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+    ctx.arc(px, py, 2, 0, Math.PI * 2);
     ctx.fill();
   }
 }
