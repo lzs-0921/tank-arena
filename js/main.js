@@ -246,8 +246,16 @@ function updateRoomClear(gs) {
       );
       if (conn) {
         transitionRoom(gs, conn.to);
+        return;
       }
-      return;
+      // No connection found — if this is the last room, advance floor
+      if (gs.floorMap.currentRoomIndex >= gs.floorMap.rooms.length - 1) {
+        gs.currentFloor++;
+        gs.floorMap = generateFloor(gs.currentFloor);
+        enterRoom(0);
+        return;
+      }
+      // Otherwise player walked through an unconnected side door, stay in room
     }
   }
 }
