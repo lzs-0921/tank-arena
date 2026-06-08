@@ -30,7 +30,7 @@ export const ENEMY_TYPES = {
     label: '狙击炮台', color: '#ff9900',
   },
   CRAWLER: {
-    radius: 10, speed: 200, hp: 1, shootCooldown: 999,
+    radius: 10, speed: 200, hp: 1, shootCooldown: CANNOT_SHOOT,
     bulletSpeed: 0, bulletDamage: 2, dropFragments: [1, 2],
     label: '自爆蜘蛛', color: '#ff00aa',
   },
@@ -40,7 +40,7 @@ export const ENEMY_TYPES = {
     label: '护盾守卫', color: '#8844ff',
   },
   HACKER: {
-    radius: 13, speed: 40, hp: 2, shootCooldown: 999,
+    radius: 13, speed: 40, hp: 2, shootCooldown: CANNOT_SHOOT,
     bulletSpeed: 0, bulletDamage: 0, dropFragments: [3, 5],
     label: '骇客节点', color: '#ff44ff',
   },
@@ -63,15 +63,21 @@ export const BULLET_TYPES = {
   EXPLOSIVE: 'explosive',
   ENERGY: 'energy',
 };
+// SPREAD is a side-grade, not in the linear evolution path
 export const BULLET_EVOLUTION = ['normal', 'bounce', 'pierce', 'explosive', 'energy'];
+
+// Sentinels
+export const INDESTRUCTIBLE_HP = 999;
+export const CANNOT_SHOOT = 999;
+export const UNCAPPED_LEVEL = 99;
 
 // Terrain
 export const TERRAIN_TYPES = {
   COVER: { hp: 3, radius: 18, label: '掩体', color: '#666644' },
-  BARRIER: { hp: 999, radius: 16, label: '能量屏障', color: '#4488ff' },
-  CONVEYOR: { hp: 999, radius: 20, label: '传送带', color: '#ffaa00' },
+  BARRIER: { hp: INDESTRUCTIBLE_HP, radius: 16, label: '能量屏障', color: '#4488ff' },
+  CONVEYOR: { hp: INDESTRUCTIBLE_HP, radius: 20, label: '传送带', color: '#ffaa00' },
   BARREL: { hp: 1, radius: 14, label: '爆炸桶', color: '#ff4400' },
-  TESLA: { hp: 999, radius: 22, label: '电网', color: '#ffff00' },
+  TESLA: { hp: INDESTRUCTIBLE_HP, radius: 22, label: '电网', color: '#ffff00' },
 };
 
 // Room
@@ -99,12 +105,12 @@ export const UPGRADES = {
   firerate:  { category: 'weapon', name: '射速提升', maxLevel: 5, effect: { fireRateMul: 0.85 }, baseCost: 10 },
   multishot: { category: 'weapon', name: '弹道+1', maxLevel: 4, effect: { bulletCountAdd: 1 }, baseCost: 15 },
   bulletSpd: { category: 'weapon', name: '弹速提升', maxLevel: 3, effect: { bulletSpeedMul: 1.25 }, baseCost: 8 },
-  damage:    { category: 'weapon', name: '伤害强化', maxLevel: 99, effect: { damageMul: 1.2 }, baseCost: 12 },
+  damage:    { category: 'weapon', name: '伤害强化', maxLevel: UNCAPPED_LEVEL, effect: { damageMul: 1.2 }, baseCost: 12 },
   evolve:    { category: 'weapon', name: '弹道进化', maxLevel: 1, effect: { evolveBullet: true }, baseCost: 30 },
   shield:    { category: 'defense', name: '护盾', maxLevel: 3, effect: { shieldAdd: 1 }, baseCost: 18 },
   speed:     { category: 'defense', name: '移速提升', maxLevel: 5, effect: { speedMul: 1.1 }, baseCost: 8 },
-  maxHp:     { category: 'defense', name: '生命上限', maxLevel: 99, effect: { hpMul: 1.15 }, baseCost: 10 },
-  fragment:  { category: 'special', name: '碎片加成', maxLevel: 99, effect: { fragmentMul: 1.3 }, baseCost: 10 },
+  maxHp:     { category: 'defense', name: '生命上限', maxLevel: UNCAPPED_LEVEL, effect: { hpMul: 1.15 }, baseCost: 10 },
+  fragment:  { category: 'special', name: '碎片加成', maxLevel: UNCAPPED_LEVEL, effect: { fragmentMul: 1.3 }, baseCost: 10 },
   turretSpd: { category: 'special', name: '炮塔转速', maxLevel: 4, effect: { turretSpeedMul: 1.3 }, baseCost: 8 },
   drone:     { category: 'special', name: '无人机随从', maxLevel: 2, effect: { droneAdd: 1 }, baseCost: 25 },
 };
