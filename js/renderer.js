@@ -16,18 +16,7 @@ export function render(gs) {
   ctx.translate(shakeX, shakeY);
 
   // Background
-  ctx.fillStyle = COLORS.BG;
-  ctx.fillRect(-10, -10, CANVAS_WIDTH + 20, CANVAS_HEIGHT + 20);
-
-  // Grid lines (subtle cyberpunk grid)
-  ctx.strokeStyle = 'rgba(51, 68, 85, 0.2)';
-  ctx.lineWidth = 0.5;
-  for (let x = 0; x < CANVAS_WIDTH; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CANVAS_HEIGHT); ctx.stroke();
-  }
-  for (let y = 0; y < CANVAS_HEIGHT; y += 40) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(CANVAS_WIDTH, y); ctx.stroke();
-  }
+  drawCyberpunkBackground(ctx, gs);
 
   // Walls
   drawWalls(ctx);
@@ -77,6 +66,123 @@ export function render(gs) {
   // Screen shake decay
   if (gs.screenShake > 0) {
     gs.screenShake = Math.max(0, gs.screenShake - gs.dt * 30);
+  }
+}
+
+function drawCyberpunkBackground(ctx, gs) {
+  const W = CANVAS_WIDTH;
+  const H = CANVAS_HEIGHT;
+  const t = gs.time;
+
+  // --- Layer 1: deep base fill ---
+  ctx.fillStyle = '#050510';
+  ctx.fillRect(-10, -10, W + 20, H + 20);
+
+  // --- Layer 2: large hex grid (subtle, stationary) ---
+  const hexR = 48;
+  const hexH = hexR * Math.sqrt(3);
+  ctx.strokeStyle = 'rgba(51, 68, 85, 0.18)';
+  ctx.lineWidth = 0.6;
+  for (let row = -1; row < H / hexH + 2; row++) {
+    for (let col = -1; col < W / (hexR * 1.5) + 2; col++) {
+      const cx = col * hexR * 1.5;
+      const cy = row * hexH + (col % 2 === 0 ? 0 : hexH / 2);
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 3 * i - Math.PI / 6;
+        const px = cx + hexR * Math.cos(angle);
+        const py = cy + hexR * Math.sin(angle);
+        i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+
+  // --- Layer 3: fine square grid with dot intersections ---
+  const gridSize = 40;
+  ctx.strokeStyle = 'rgba(68, 85, 102, 0.15)';
+  ctx.lineWidth = 0.4;
+  for (let x = 0; x <= W; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
+  for (let y = 0; y <= H; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+
+  // Glowing dots at grid intersections
+  for (let x = 0; x <= W; x += gridSize) {
+    for (let y = 0; y <= H; y += gridSize) {
+      const pulse = 0.3 + Math.sin(t * 2 + x * 0.05 + y * 0.03) * 0.2;
+      ctx.fillStyle = `rgba(0, 255, 136, ${pulse * 0.25})`;
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = pulse * 4;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.shadowBlur = 0;
+
+  // --- Layer 4: circuit traces (thin neon lines, random segments) ---
+  ctx.strokeStyle = 'rgba(0, 255, 136, 0.06)';
+  ctx.lineWidth = 0.8;
+  // Use deterministic pseudo-random based on floor so traces are consistent per room
+  const seed = gs.currentFloor * 137 + (gs.currentRoom ? gs.currentRoom.type.charCodeAt(0) : 0);
+  for (let i = 0; i < 18; i++) {
+    const sx = ((seed * (i + 1) * 73 + i * 251) % W);
+    const sy = ((seed * (i + 1) * 197 + i * 317) % H);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    let cx = sx, cy = sy;
+    for (let j = 0; j < 3; j++) {
+      cx += (((seed + i * 7 + j * 13) * 59) % 120) - 40;
+      cy += (((seed + i * 11 + j * 17) * 43) % 120) - 40;
+      ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+  }
+
+  // --- Layer 5: corner HUD brackets ---
+  const bracketLen = 30;
+  const bracketGap = 16;
+  const bracketColor = 'rgba(0, 255, 136, 0.35)';
+  ctx.strokeStyle = bracketColor;
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur = 6;
+  // Top-left
+  ctx.beginPath(); ctx.moveTo(bracketGap, bracketGap + bracketLen); ctx.lineTo(bracketGap, bracketGap); ctx.lineTo(bracketGap + bracketLen, bracketGap); ctx.stroke();
+  // Top-right
+  ctx.beginPath(); ctx.moveTo(W - bracketGap - bracketLen, bracketGap); ctx.lineTo(W - bracketGap, bracketGap); ctx.lineTo(W - bracketGap, bracketGap + bracketLen); ctx.stroke();
+  // Bottom-left
+  ctx.beginPath(); ctx.moveTo(bracketGap, H - bracketGap - bracketLen); ctx.lineTo(bracketGap, H - bracketGap); ctx.lineTo(bracketGap + bracketLen, H - bracketGap); ctx.stroke();
+  // Bottom-right
+  ctx.beginPath(); ctx.moveTo(W - bracketGap - bracketLen, H - bracketGap); ctx.lineTo(W - bracketGap, H - bracketGap); ctx.lineTo(W - bracketGap, H - bracketGap - bracketLen); ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // --- Layer 6: radial vignette (dark edges) ---
+  const vignetteGrad = ctx.createRadialGradient(W / 2, H / 2, W * 0.35, W / 2, H / 2, W * 0.75);
+  vignetteGrad.addColorStop(0, 'rgba(5, 5, 16, 0)');
+  vignetteGrad.addColorStop(1, 'rgba(5, 5, 16, 0.6)');
+  ctx.fillStyle = vignetteGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // --- Layer 7: scanlines ---
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+  for (let y = 0; y < H; y += 3) {
+    ctx.fillRect(0, y, W, 1);
+  }
+
+  // --- Layer 8: floating data particles (background only, not interactable) ---
+  for (let i = 0; i < 12; i++) {
+    const px = ((Math.sin(t * 0.3 + i * 1.7) * 0.5 + 0.5) * W);
+    const py = ((Math.cos(t * 0.4 + i * 2.1) * 0.5 + 0.5) * H);
+    const alpha = 0.08 + Math.sin(t * 3 + i) * 0.04;
+    ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
