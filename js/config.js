@@ -12,6 +12,11 @@ export const PLAYER_TURRET_SPEED = 6;
 export const PLAYER_BULLET_SPEED = 350;
 export const PLAYER_BULLET_DAMAGE = 1;
 
+// Sentinels
+export const INDESTRUCTIBLE_HP = 999;
+export const CANNOT_SHOOT = 999;
+export const UNCAPPED_LEVEL = 99;
+
 // Enemies
 export const ENEMY_TYPES = {
   DRONE: {
@@ -65,11 +70,6 @@ export const BULLET_TYPES = {
 };
 // SPREAD is a side-grade, not in the linear evolution path
 export const BULLET_EVOLUTION = ['normal', 'bounce', 'pierce', 'explosive', 'energy'];
-
-// Sentinels
-export const INDESTRUCTIBLE_HP = 999;
-export const CANNOT_SHOOT = 999;
-export const UNCAPPED_LEVEL = 99;
 
 // Terrain
 export const TERRAIN_TYPES = {
