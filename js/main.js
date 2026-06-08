@@ -99,12 +99,38 @@ function transitionRoom(gs, toIndex) {
   }
 
   const nextRoom = gs.floorMap.rooms[toIndex];
+
   if (nextRoom.type === 'shop') {
     gs.currentRoom = nextRoom;
     gs.state = 'SHOP';
+    repositionPlayer(gs, toIndex);
     showShopScreen(gs, () => enterRoom(toIndex));
   } else {
     enterRoom(toIndex);
+    repositionPlayer(gs, toIndex);
+  }
+}
+
+function repositionPlayer(gs, toIndex) {
+  if (!gs.player) return;
+  const room = gs.floorMap.rooms[toIndex];
+  const conn = gs.floorMap.connections.find(c => c.to === toIndex);
+  if (!conn) return;
+
+  const entryDoor = room.doors.find(d => {
+    if (conn.doorSide === 'east') return d.side === 'west';
+    if (conn.doorSide === 'west') return d.side === 'east';
+    if (conn.doorSide === 'north') return d.side === 'south';
+    if (conn.doorSide === 'south') return d.side === 'north';
+    return false;
+  });
+  if (entryDoor) {
+    gs.player.x = entryDoor.x + entryDoor.width / 2;
+    gs.player.y = entryDoor.y + entryDoor.height / 2;
+    if (entryDoor.side === 'west') gs.player.x += 40;
+    if (entryDoor.side === 'east') gs.player.x -= 40;
+    if (entryDoor.side === 'north') gs.player.y += 40;
+    if (entryDoor.side === 'south') gs.player.y -= 40;
   }
 }
 
@@ -224,15 +250,37 @@ function updateRunning(gs) {
     !gs.currentRoom.cleared
   ) {
     gs.currentRoom.openDoors();
-    gs.roomsCleared++;
     gs.state = 'ROOM_CLEAR';
   }
 }
 
 function updateRoomClear(gs) {
-  const player = gs.player;
+  const { player, input } = gs;
   if (!player || !player.alive) return;
 
+  // Continue player movement so they can walk to doors
+  let moveX = 0, moveY = 0;
+  if (isKeyDown(input, 'UP')) moveY -= 1;
+  if (isKeyDown(input, 'DOWN')) moveY += 1;
+  if (isKeyDown(input, 'LEFT')) moveX -= 1;
+  if (isKeyDown(input, 'RIGHT')) moveX += 1;
+  const len = Math.sqrt(moveX * moveX + moveY * moveY);
+  if (len > 1) { moveX /= len; moveY /= len; }
+  player.x += moveX * player.speed * gs.dt;
+  player.y += moveY * player.speed * gs.dt;
+  player.x = Math.max(player.radius, Math.min(CANVAS_WIDTH - player.radius, player.x));
+  player.y = Math.max(player.radius, Math.min(CANVAS_HEIGHT - player.radius, player.y));
+  if (len > 0.1) player.bodyAngle = Math.atan2(moveY, moveX);
+
+  // Turret still follows mouse
+  const targetAngle = Math.atan2(input.mouseY - player.y, input.mouseX - player.x);
+  let angleDiff = targetAngle - player.turretAngle;
+  while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+  while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+  const maxRot = player.turretSpeed * gs.dt;
+  player.turretAngle += Math.max(-maxRot, Math.min(maxRot, angleDiff));
+
+  // Check door proximity
   for (let i = 0; i < gs.currentRoom.doors.length; i++) {
     const door = gs.currentRoom.doors[i];
     if (!door.open) continue;
@@ -248,14 +296,13 @@ function updateRoomClear(gs) {
         transitionRoom(gs, conn.to);
         return;
       }
-      // No connection found — if this is the last room, advance floor
+      // No connection — last room, advance floor
       if (gs.floorMap.currentRoomIndex >= gs.floorMap.rooms.length - 1) {
         gs.currentFloor++;
         gs.floorMap = generateFloor(gs.currentFloor);
         enterRoom(0);
         return;
       }
-      // Otherwise player walked through an unconnected side door, stay in room
     }
   }
 }
